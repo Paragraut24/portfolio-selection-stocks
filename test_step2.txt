@@ -1,0 +1,57 @@
+Test Plan for Step 2:
+
+1. Load CSV file:
+   - Run: ./portfolio
+   - Choose option 1
+   - Enter: data/sample_small.csv
+   - Expected: "Successfully loaded 5 stocks"
+
+2. Display stocks:
+   - Choose option 2
+   - Expected: Table showing 5 stocks (INFY, TCS, AAPL, TSLA, RELIANCE)
+
+3. Add duplicate stock (should reject):
+   - Choose option 3
+   - ID: 6, Name: INFY, Cost: 1000, Return: 10, Risk: 5
+   - Expected: "Error: Stock with name 'INFY' already exists."
+
+4. Add valid stock:
+   - Choose option 3
+   - ID: 6, Name: GOOGL, Cost: 2800, Return: 13.5, Risk: 9
+   - Expected: "Stock added successfully."
+
+5. Display stocks again:
+   - Choose option 2
+   - Expected: Table showing 6 stocks including GOOGL
+
+6. Edit stock:
+   - Choose option 4
+   - ID: 6
+   - New cost: 3000, Return: 14.0, Risk: 8.5
+   - Expected: "Stock updated successfully."
+
+7. Display to verify edit:
+   - Choose option 2
+   - Expected: GOOGL shows cost=3000, return=14.0, risk=8.5
+
+8. Export to CSV:
+   - Choose option 6
+   - Path: data/test_export.csv
+   - Expected: "Successfully saved 6 stocks"
+
+9. Delete stock:
+   - Choose option 5
+   - ID: 6
+   - Expected: "Stock 'GOOGL' deleted successfully."
+
+10. Display final state:
+    - Choose option 2
+    - Expected: Table showing 5 original stocks
+
+11. Test invalid inputs:
+    - Try loading non-existent file
+    - Try adding stock with negative cost
+    - Try editing non-existent ID
+
+12. Exit:
+    - Choose option 14

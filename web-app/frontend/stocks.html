@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Data - Portfolio Selection</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>Stock Data Management</h1>
+            <p>Fetch real-time data and manage your stock portfolio</p>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <h2>Fetch Real-Time Stock Data</h2>
+                <p>Fetch latest stock data from external sources</p>
+                <select id="dataSource">
+                    <option value="mock">Mock Data (Testing)</option>
+                    <option value="alpha_vantage">Alpha Vantage API</option>
+                    <option value="yahoo">Yahoo Finance</option>
+                </select>
+                <button onclick="fetchStockData()" style="margin-top: 0.5rem;">Fetch Stock Data</button>
+                <div id="fetchMessage"></div>
+            </div>
+
+            <div class="card">
+                <h2>Upload Stock Data</h2>
+                <p>Upload a CSV file with columns: id, name, cost, expected_return_percent, risk_score</p>
+                <input type="file" id="fileInput" accept=".csv">
+                <button onclick="uploadFile()">Upload CSV</button>
+                <div id="uploadMessage"></div>
+            </div>
+
+            <div class="card">
+                <h2>Current Stock Data</h2>
+                <button onclick="loadStocks()">Refresh Data</button>
+                <div id="stocksMessage"></div>
+                <div id="stocksTable"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script src="js/auth-check.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        async function fetchStockData() {
+            const source = document.getElementById('dataSource').value;
+            Utils.showLoading('fetchMessage', 'Fetching stock data...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/stocks/fetch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Utils.showMessage('fetchMessage', 
+                        `Successfully fetched ${data.stocks_count} stocks from ${source}!`, 'success');
+                    loadStocks();
+                } else {
+                    Utils.showMessage('fetchMessage', 
+                        `Fetch failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                Utils.showMessage('fetchMessage', 
+                    `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadStocks() {
+            Utils.showLoading('stocksTable', 'Loading stocks...');
+            
+            try {
+                const stocks = await API.fetchStocks();
+                
+                let html = '<table><thead><tr>';
+                html += '<th>ID</th><th>Name</th><th>Cost (Rs.)</th>';
+                html += '<th>Return %</th><th>Risk Score</th></tr></thead><tbody>';
+                
+                stocks.forEach(stock => {
+                    const returnPct = stock.expected_return_percent || stock.return_pct || 0;
+                    const riskScore = stock.risk_score || stock.risk || 0;
+                    
+                    html += `<tr>
+                        <td>${stock.id}</td>
+                        <td>${stock.name}</td>
+                        <td>${Utils.formatCurrency(stock.cost)}</td>
+                        <td>${Utils.formatPercent(returnPct)}</td>
+                        <td>${parseFloat(riskScore).toFixed(1)}</td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table>';
+                document.getElementById('stocksTable').innerHTML = html;
+                Utils.showMessage('stocksMessage', `Loaded ${stocks.length} stocks successfully`, 'success');
+            } catch (error) {
+                Utils.showMessage('stocksTable', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                Utils.showMessage('uploadMessage', 'Please select a file', 'error');
+                return;
+            }
+            
+            Utils.showLoading('uploadMessage', 'Uploading...');
+            
+            try {
+                await API.uploadStocks(file);
+                Utils.showMessage('uploadMessage', 'File uploaded successfully!', 'success');
+                fileInput.value = '';
+                loadStocks();
+            } catch (error) {
+                Utils.showMessage('uploadMessage', `Upload failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Load stocks on page load
+        loadStocks();
+    </script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Selection System - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <div>
+                <h1>Portfolio Optimization Dashboard</h1>
+                <p>Advanced algorithmic portfolio management and analysis platform</p>
+            </div>
+            <div style="text-align: right; color: #64748b; font-size: 0.875rem;">
+                <div style="margin-bottom: 0.5rem;">
+                    <span style="color: #475569; font-weight: 500;">Welcome, </span>
+                    <span id="userName" style="color: #6366f1; font-weight: 600;">Loading...</span>
+                </div>
+                <div id="lastUpdated">Last updated: Loading...</div>
+                <div id="systemStatusBadge" style="margin-top: 0.5rem;">
+                    <span class="status-badge">● Checking...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Key Metrics -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                        </svg>
+                    </div>
+                    <h3 id="stockCount">-</h3>
+                    <p>Available Stocks</p>
+                    <span class="stat-trend">Market data loaded</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                    </div>
+                    <h3 id="avgReturn">-</h3>
+                    <p>Average Return</p>
+                    <span class="stat-trend">Expected performance</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <h3 id="avgRisk">-</h3>
+                    <p>Average Risk Score</p>
+                    <span class="stat-trend">Portfolio volatility</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <h3 id="totalValue">-</h3>
+                    <p>Total Market Value</p>
+                    <span class="stat-trend">Combined stock value</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <h2>Quick Actions</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <a href="stocks.html" class="action-button">
+                        <div class="action-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="20" x2="12" y2="10"></line>
+                                <line x1="18" y1="20" x2="18" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>Manage Stock Data</h3>
+                            <p>View, upload, or fetch real-time stock information</p>
+                        </div>
+                    </a>
+                    <a href="optimizer.html" class="action-button">
+                        <div class="action-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>Run Optimization</h3>
+                            <p>Execute algorithms to optimize your portfolio</p>
+                        </div>
+                    </a>
+                    <a href="analytics.html" class="action-button">
+                        <div class="action-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>View Analytics</h3>
+                            <p>Explore charts, graphs, and Power BI dashboards</p>
+                        </div>
+                    </a>
+                    <a href="analysis.html" class="action-button">
+                        <div class="action-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>Algorithm Analysis</h3>
+                            <p>Compare performance across different algorithms</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Algorithm Overview -->
+            <div class="card">
+                <h2>Optimization Algorithms</h2>
+                <p style="color: #64748b; margin-bottom: 1.5rem;">Our system employs multiple advanced algorithms to provide optimal portfolio selection strategies</p>
+                <div style="display: grid; gap: 1rem;">
+                    <div class="algorithm-card">
+                        <div class="algo-header">
+                            <h3>2D Dynamic Programming</h3>
+                            <span class="complexity-badge">O(n × W)</span>
+                        </div>
+                        <p>Optimal solution using a 2D table for comprehensive tracking. Guarantees the best possible portfolio selection within budget constraints.</p>
+                        <div class="algo-features">
+                            <span>✓ Optimal Solution</span>
+                            <span>✓ Complete Tracking</span>
+                            <span>✓ Guaranteed Results</span>
+                        </div>
+                    </div>
+                    <div class="algorithm-card">
+                        <div class="algo-header">
+                            <h3>1D Dynamic Programming</h3>
+                            <span class="complexity-badge">O(W)</span>
+                        </div>
+                        <p>Space-optimized approach that achieves the same optimal results with significantly reduced memory footprint.</p>
+                        <div class="algo-features">
+                            <span>✓ Optimal Solution</span>
+                            <span>✓ Memory Efficient</span>
+                            <span>✓ Fast Execution</span>
+                        </div>
+                    </div>
+                    <div class="algorithm-card">
+                        <div class="algo-header">
+                            <h3>Greedy Algorithm</h3>
+                            <span class="complexity-badge">O(n log n)</span>
+                        </div>
+                        <p>Fast heuristic approach based on return-to-cost ratio. Provides near-optimal solutions with exceptional speed.</p>
+                        <div class="algo-features">
+                            <span>✓ Ultra Fast</span>
+                            <span>✓ Good Results</span>
+                            <span>✓ Scalable</span>
+                        </div>
+                    </div>
+                    <div class="algorithm-card">
+                        <div class="algo-header">
+                            <h3>Fractional Knapsack</h3>
+                            <span class="complexity-badge">O(n log n)</span>
+                        </div>
+                        <p>Allows partial stock purchases to maximize returns. Useful for scenarios where fractional shares are permitted.</p>
+                        <div class="algo-features">
+                            <span>✓ Maximum Returns</span>
+                            <span>✓ Flexible Investment</span>
+                            <span>✓ Budget Optimized</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Market Overview -->
+            <div class="card">
+                <h2>Market Overview</h2>
+                <div id="marketOverview">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading market data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Charts -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                <div class="card">
+                    <h2>Stock Performance by Return</h2>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="topStocksChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>Stock Risk Analysis</h2>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="riskDistChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="card">
+                <h2>System Information</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                    <div class="info-box">
+                        <h4>Backend Status</h4>
+                        <div id="backendStatus">Checking...</div>
+                    </div>
+                    <div class="info-box">
+                        <h4>Database</h4>
+                        <div id="databaseStatus">CSV-based storage</div>
+                    </div>
+                    <div class="info-box">
+                        <h4>Algorithms Available</h4>
+                        <div>4 optimization methods</div>
+                    </div>
+                    <div class="info-box">
+                        <h4>Version</h4>
+                        <div>v1.0.0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script src="js/auth-check.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        let charts = {};
+        
+        // Load user information
+        async function loadUserInfo() {
+            try {
+                const username = localStorage.getItem('user_name') || localStorage.getItem('username');
+                const email = localStorage.getItem('user_email');
+                
+                if (username) {
+                    document.getElementById('userName').textContent = username;
+                } else if (email) {
+                    // Extract name from email if username not available
+                    const name = email.split('@')[0];
+                    document.getElementById('userName').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+                } else {
+                    document.getElementById('userName').textContent = 'User';
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                document.getElementById('userName').textContent = 'User';
+            }
+        }
+        
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/stocks`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stocks = data.stocks;
+                    updateMetrics(stocks);
+                    createMarketOverview(stocks);
+                    createCharts(stocks);
+                    updateSystemStatus(true);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                updateSystemStatus(false, error.message);
+                document.getElementById('stockCount').textContent = '0';
+                document.getElementById('avgReturn').textContent = '0%';
+                document.getElementById('avgRisk').textContent = '0';
+                document.getElementById('totalValue').textContent = 'Rs.0';
+            }
+        }
+        
+        function updateMetrics(stocks) {
+            // Stock count
+            document.getElementById('stockCount').textContent = stocks.length;
+            
+            // Average return
+            const avgReturn = stocks.reduce((sum, s) => {
+                const returnPct = parseFloat(s.expected_return_percent || s.return_pct || 0);
+                return sum + returnPct;
+            }, 0) / stocks.length;
+            document.getElementById('avgReturn').textContent = avgReturn.toFixed(2) + '%';
+            
+            // Average risk
+            const avgRisk = stocks.reduce((sum, s) => {
+                const risk = parseFloat(s.risk_score || s.risk || 0);
+                return sum + risk;
+            }, 0) / stocks.length;
+            document.getElementById('avgRisk').textContent = avgRisk.toFixed(2);
+            
+            // Total value
+            const totalValue = stocks.reduce((sum, s) => sum + parseInt(s.cost || 0), 0);
+            document.getElementById('totalValue').textContent = 'Rs.' + totalValue.toLocaleString();
+            
+            // Last updated
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = 
+                `Last updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+        }
+        
+        function createMarketOverview(stocks) {
+            // Sort by return percentage
+            const sortedStocks = [...stocks].sort((a, b) => {
+                const aReturn = parseFloat(a.expected_return_percent || a.return_pct || 0);
+                const bReturn = parseFloat(b.expected_return_percent || b.return_pct || 0);
+                return bReturn - aReturn;
+            });
+            
+            let html = '<table><thead><tr>';
+            html += '<th>Rank</th><th>Stock</th><th>Cost</th><th>Return %</th><th>Risk</th><th>Performance</th></tr></thead><tbody>';
+            
+            sortedStocks.slice(0, 10).forEach((stock, index) => {
+                const returnPct = parseFloat(stock.expected_return_percent || stock.return_pct || 0);
+                const risk = parseFloat(stock.risk_score || stock.risk || 0);
+                const performance = returnPct > 15 ? '🔥 Excellent' : returnPct > 10 ? '✓ Good' : '○ Moderate';
+                
+                html += `<tr>
+                    <td><strong>${index + 1}</strong></td>
+                    <td>${stock.name}</td>
+                    <td>Rs.${parseInt(stock.cost).toLocaleString()}</td>
+                    <td><span style="color: #10b981; font-weight: 600;">${returnPct.toFixed(2)}%</span></td>
+                    <td>${risk.toFixed(1)}</td>
+                    <td>${performance}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('marketOverview').innerHTML = html;
+        }
+        
+        function createCharts(stocks) {
+            // All stocks sorted by return percentage
+            const sortedStocks = [...stocks]
+                .sort((a, b) => {
+                    const aReturn = parseFloat(a.expected_return_percent || a.return_pct || 0);
+                    const bReturn = parseFloat(b.expected_return_percent || b.return_pct || 0);
+                    return bReturn - aReturn;
+                });
+            
+            if (charts.topStocks) charts.topStocks.destroy();
+            const ctx1 = document.getElementById('topStocksChart');
+            charts.topStocks = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: sortedStocks.map(s => s.name),
+                    datasets: [{
+                        label: 'Expected Return %',
+                        data: sortedStocks.map(s => parseFloat(s.expected_return_percent || s.return_pct || 0)),
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Return: ${context.parsed.y.toFixed(2)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Return %'
+                            },
+                            grid: {
+                                color: '#f1f5f9'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Risk distribution chart - pie chart showing all stocks
+            if (charts.riskDist) charts.riskDist.destroy();
+            const ctx2 = document.getElementById('riskDistChart');
+            
+            // Sort stocks by risk score for consistent display
+            const sortedByRisk = [...stocks].sort((a, b) => {
+                const aRisk = parseFloat(a.risk_score || a.risk || 0);
+                const bRisk = parseFloat(b.risk_score || b.risk || 0);
+                return bRisk - aRisk;
+            });
+            
+            // Assign colors based on risk level
+            const riskColors = sortedByRisk.map(s => {
+                const risk = parseFloat(s.risk_score || s.risk || 0);
+                if (risk < 5) return '#10b981'; // Green - Low risk
+                else if (risk < 10) return '#f59e0b'; // Orange - Medium risk
+                else return '#ef4444'; // Red - High risk
+            });
+            
+            charts.riskDist = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: sortedByRisk.map(s => s.name),
+                    datasets: [{
+                        label: 'Risk Score',
+                        data: sortedByRisk.map(s => parseFloat(s.risk_score || s.risk || 0)),
+                        backgroundColor: riskColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                },
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    return data.labels.map((label, i) => {
+                                        const risk = data.datasets[0].data[i];
+                                        let level = 'Low';
+                                        if (risk >= 10) level = 'High';
+                                        else if (risk >= 5) level = 'Medium';
+                                        
+                                        return {
+                                            text: `${label}: ${risk.toFixed(1)} (${level})`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const risk = context.parsed;
+                                    let level = 'Low';
+                                    if (risk >= 10) level = 'High';
+                                    else if (risk >= 5) level = 'Medium';
+                                    return `${context.label}: ${risk.toFixed(1)} (${level} Risk)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateSystemStatus(isOnline, errorMsg = '') {
+            const badge = document.getElementById('systemStatusBadge');
+            const status = document.getElementById('backendStatus');
+            
+            if (isOnline) {
+                badge.innerHTML = '<span class="status-badge status-online">● Online</span>';
+                status.innerHTML = '<span style="color: #10b981;">✓ Connected</span>';
+            } else {
+                badge.innerHTML = '<span class="status-badge status-offline">● Offline</span>';
+                status.innerHTML = `<span style="color: #ef4444;">✗ ${errorMsg || 'Disconnected'}</span>`;
+            }
+        }
+        
+        // Load dashboard on page load
+        loadUserInfo();
+        loadDashboard();
+        
+        // Refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Analysis - Portfolio Selection</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>Algorithm Analysis</h1>
+            <p>Compare performance, runtime, and efficiency of optimization algorithms</p>
+        </div>
+
+        <div class="container">
+
+        <div id="analysisMessage"></div>
+
+        <div class="card">
+            <h2>Algorithm Comparison</h2>
+            <button onclick="loadComparison()">Load Comparison Data</button>
+            <div id="comparisonTable"></div>
+        </div>
+
+        <div class="card" id="chartsCard" style="display: none;">
+            <h2>Performance Metrics</h2>
+            <p style="color: #64748b; margin-bottom: 2rem;">Visual analysis of algorithm performance, efficiency, and optimization results</p>
+            
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="returnChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="runtimeChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="stocksChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Complexity Analysis</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Time Complexity</th>
+                        <th>Space Complexity</th>
+                        <th>Optimal Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2D DP</td>
+                        <td>O(n * W)</td>
+                        <td>O(n * W)</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>1D DP</td>
+                        <td>O(n * W)</td>
+                        <td>O(W)</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Greedy</td>
+                        <td>O(n log n)</td>
+                        <td>O(n)</td>
+                        <td>No (Heuristic)</td>
+                    </tr>
+                    <tr>
+                        <td>Fractional</td>
+                        <td>O(n log n)</td>
+                        <td>O(n)</td>
+                        <td>Yes (for fractional)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Algorithm Recommendations</h2>
+            <div style="line-height: 1.8;">
+                <h3 style="color: #667eea; margin-top: 1rem;">When to use 2D DP:</h3>
+                <p>Need optimal solution with detailed tracking. Can afford O(n*W) space.</p>
+                
+                <h3 style="color: #667eea; margin-top: 1rem;">When to use 1D DP:</h3>
+                <p>Need optimal solution but memory is limited. Best space-time tradeoff.</p>
+                
+                <h3 style="color: #667eea; margin-top: 1rem;">When to use Greedy:</h3>
+                <p>Need fast approximate solution. Real-time applications with large datasets.</p>
+                
+                <h3 style="color: #667eea; margin-top: 1rem;">When to use Fractional:</h3>
+                <p>Partial stock purchases allowed. Provides upper bound for 0/1 knapsack.</p>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script src="js/auth-check.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        let comparisonCharts = {};
+        
+        async function loadComparison() {
+            Utils.showLoading('analysisMessage', 'Loading comparison data...');
+            
+            try {
+                const comparison = await API.fetchComparison();
+                
+                if (comparison.length === 0) {
+                    Utils.showMessage('analysisMessage', 
+                        'No comparison data found. Run optimization first.', 'info');
+                    return;
+                }
+                
+                displayComparison(comparison);
+                createComparisonCharts(comparison);
+                
+                document.getElementById('chartsCard').style.display = 'block';
+                Utils.showMessage('analysisMessage', 
+                    'Comparison data loaded successfully', 'success');
+            } catch (error) {
+                Utils.showMessage('analysisMessage', 
+                    `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function displayComparison(comparison) {
+            let html = '<table><thead><tr>';
+            html += '<th>Algorithm</th><th>Stocks Selected</th><th>Total Cost</th>';
+            html += '<th>Expected Return</th><th>Return %</th><th>Runtime (ms)</th></tr></thead><tbody>';
+            
+            comparison.forEach(row => {
+                // Handle both column names for backward compatibility
+                const stocksSelected = row.num_stocks || row.stocks_selected || 'N/A';
+                const avgReturnPercent = row.avg_return_pct || row.avg_return_percent || 0;
+                const runtime = parseFloat(row.runtime_ms);
+                const runtimeDisplay = runtime < 0.01 ? '<0.01' : runtime.toFixed(2);
+                
+                html += `<tr>
+                    <td>${row.algorithm}</td>
+                    <td>${stocksSelected}</td>
+                    <td>${Utils.formatCurrency(row.total_cost)}</td>
+                    <td>${Utils.formatCurrency(row.total_expected_return)}</td>
+                    <td>${Utils.formatPercent(avgReturnPercent)}</td>
+                    <td>${runtimeDisplay}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('comparisonTable').innerHTML = html;
+        }
+        
+        function createComparisonCharts(comparison) {
+            const algorithms = comparison.map(c => c.algorithm);
+            
+            // Common chart options
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 13,
+                                weight: '600',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                        titleFont: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    if (context.dataset.label.includes('Rs.')) {
+                                        label += '₹' + context.parsed.y.toLocaleString('en-IN', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        });
+                                    } else {
+                                        label += context.parsed.y.toLocaleString();
+                                    }
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            },
+                            color: '#64748b'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#64748b',
+                            padding: 10
+                        }
+                    }
+                }
+            };
+            
+            // Return Chart
+            if (comparisonCharts.return) comparisonCharts.return.destroy();
+            const returnCtx = document.getElementById('returnChart');
+            comparisonCharts.return = new Chart(returnCtx, {
+                type: 'bar',
+                data: {
+                    labels: algorithms,
+                    datasets: [{
+                        label: 'Expected Return (Rs.)',
+                        data: comparison.map(c => parseFloat(c.total_expected_return)),
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }, {
+                        label: 'Total Cost (Rs.)',
+                        data: comparison.map(c => parseFloat(c.total_cost)),
+                        backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Expected Return vs Investment Cost Comparison',
+                            font: { 
+                                size: 16, 
+                                weight: '700',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto'
+                            },
+                            color: '#1e293b',
+                            padding: {
+                                top: 10,
+                                bottom: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'Amount (₹)',
+                                font: {
+                                    size: 13,
+                                    weight: '600'
+                                },
+                                color: '#475569'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Runtime Chart
+            if (comparisonCharts.runtime) comparisonCharts.runtime.destroy();
+            const runtimeCtx = document.getElementById('runtimeChart');
+            comparisonCharts.runtime = new Chart(runtimeCtx, {
+                type: 'bar',
+                data: {
+                    labels: algorithms,
+                    datasets: [{
+                        label: 'Execution Time (ms)',
+                        data: comparison.map(c => parseFloat(c.runtime_ms)),
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Algorithm Computational Performance Analysis',
+                            font: { 
+                                size: 16, 
+                                weight: '700',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto'
+                            },
+                            color: '#1e293b',
+                            padding: {
+                                top: 10,
+                                bottom: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'Execution Time (milliseconds)',
+                                font: {
+                                    size: 13,
+                                    weight: '600'
+                                },
+                                color: '#475569'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Stocks Selected Chart
+            if (comparisonCharts.stocks) comparisonCharts.stocks.destroy();
+            const stocksCtx = document.getElementById('stocksChart');
+            comparisonCharts.stocks = new Chart(stocksCtx, {
+                type: 'bar',
+                data: {
+                    labels: algorithms,
+                    datasets: [{
+                        label: 'Number of Stocks',
+                        data: comparison.map(c => parseInt(c.num_stocks || c.stocks_selected || 0)),
+                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Portfolio Composition - Number of Stocks Selected',
+                            font: { 
+                                size: 16, 
+                                weight: '700',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto'
+                            },
+                            color: '#1e293b',
+                            padding: {
+                                top: 10,
+                                bottom: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            ticks: {
+                                ...commonOptions.scales.y.ticks,
+                                stepSize: 1
+                            },
+                            title: {
+                                display: true,
+                                text: 'Stock Count',
+                                font: {
+                                    size: 13,
+                                    weight: '600'
+                                },
+                                color: '#475569'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

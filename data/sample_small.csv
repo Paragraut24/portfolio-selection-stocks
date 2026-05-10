@@ -1,0 +1,6 @@
+id,name,cost,expected_return_percent,risk_score
+1,INFY,1400,10.0,6
+2,TCS,3200,11.0,5
+3,AAPL,150,12.0,8
+4,TSLA,250,20.0,15
+5,RELIANCE,2400,9.0,7

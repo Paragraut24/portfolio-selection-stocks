@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Portfolio Selection</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>Portfolio Analytics</h1>
+            <p>Risk analysis, performance metrics, and diversification insights for your investment portfolio</p>
+        </div>
+
+        <div class="container">
+
+        <div id="analyticsMessage"></div>
+
+        <div class="card">
+            <h2>Risk vs Return Analysis</h2>
+            <div class="chart-container">
+                <canvas id="riskReturnChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Portfolio Diversification</h2>
+            <p style="color: #64748b; margin-bottom: 1rem;">Diversified stock selection based on MST algorithm</p>
+            <button onclick="loadDiversification()">Load Diversification Data</button>
+            <div id="diversificationTable"></div>
+        </div>
+
+        <div class="card">
+            <h2>Stock Performance Comparison</h2>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Investment Distribution</h2>
+            <div class="chart-container">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+
+
+        </div>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script src="js/auth-check.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        let charts = {};
+        
+        async function loadAnalytics() {
+            Utils.showLoading('analyticsMessage', 'Loading analytics...');
+            
+            try {
+                const stocks = await API.fetchStocks();
+                
+                // Risk vs Return Chart
+                createRiskReturnChart(stocks);
+                
+                // Performance Chart
+                createPerformanceChart(stocks);
+                
+                // Distribution Chart
+                createDistributionChart(stocks);
+                
+                Utils.showMessage('analyticsMessage', 
+                    'Analytics loaded successfully', 'success');
+            } catch (error) {
+                Utils.showMessage('analyticsMessage', 
+                    `Error loading analytics: ${error.message}`, 'error');
+            }
+        }
+        
+        function createRiskReturnChart(stocks) {
+            if (charts.riskReturn) charts.riskReturn.destroy();
+            
+            const ctx = document.getElementById('riskReturnChart');
+            charts.riskReturn = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Stocks',
+                        data: stocks.map(s => ({
+                            x: parseFloat(s.risk_score || s.risk || 0),
+                            y: parseFloat(s.expected_return_percent || s.return_pct || 0),
+                            label: s.name
+                        })),
+                        backgroundColor: '#6366f1',
+                        borderColor: '#8b5cf6',
+                        pointRadius: 8,
+                        pointHoverRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Risk vs Expected Return',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const point = context.raw;
+                                    return `${stocks[context.dataIndex].name}: Risk ${point.x}, Return ${point.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Risk Score'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Expected Return %'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createPerformanceChart(stocks) {
+            if (charts.performance) charts.performance.destroy();
+            
+            const ctx = document.getElementById('performanceChart');
+            charts.performance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stocks.map(s => s.name),
+                    datasets: [{
+                        label: 'Expected Return %',
+                        data: stocks.map(s => parseFloat(s.expected_return_percent || s.return_pct || 0)),
+                        backgroundColor: '#6366f1'
+                    }, {
+                        label: 'Risk Score',
+                        data: stocks.map(s => parseFloat(s.risk_score || s.risk || 0)),
+                        backgroundColor: '#8b5cf6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Stock Performance Metrics',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createDistributionChart(stocks) {
+            if (charts.distribution) charts.distribution.destroy();
+            
+            const ctx = document.getElementById('distributionChart');
+            charts.distribution = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: stocks.map(s => s.name),
+                    datasets: [{
+                        data: stocks.map(s => s.cost),
+                        backgroundColor: [
+                            '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                            '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+                            '#a8edea', '#fed6e3'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Stock Cost Distribution',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        async function loadDiversification() {
+            Utils.showLoading('diversificationTable', 'Loading diversification data...');
+            
+            try {
+                const results = await API.fetchDiversification();
+                
+                if (!results || results.length === 0) {
+                    document.getElementById('diversificationTable').innerHTML = 
+                        '<p style="color: #64748b; padding: 1rem;">No diversification data available. Run optimization first.</p>';
+                    return;
+                }
+                
+                // Check if data has MST edges format (stock1, stock2, weight) or stock list format
+                const firstRow = results[0];
+                const hasEdgeFormat = firstRow.hasOwnProperty('stock1_id') || firstRow.hasOwnProperty('stock1_name');
+                
+                if (hasEdgeFormat) {
+                    // Display MST edges
+                    let html = '<table><thead><tr>';
+                    html += '<th>Stock 1</th><th>Stock 2</th><th>Correlation Weight</th></tr></thead><tbody>';
+                    
+                    results.forEach(row => {
+                        const stock1 = row.stock1_name || row.stock1_id || 'N/A';
+                        const stock2 = row.stock2_name || row.stock2_id || 'N/A';
+                        const weight = row.weight ? parseFloat(row.weight).toFixed(4) : 'N/A';
+                        
+                        html += `<tr>
+                            <td>${stock1}</td>
+                            <td>${stock2}</td>
+                            <td>${weight}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</tbody></table>';
+                    document.getElementById('diversificationTable').innerHTML = html;
+                } else {
+                    // Display diversified stock list
+                    let html = '<table><thead><tr>';
+                    html += '<th>Stock ID</th><th>Stock Name</th><th>Cost</th><th>Return %</th><th>Risk Score</th></tr></thead><tbody>';
+                    
+                    results.forEach(row => {
+                        const stockId = row.stock_id || row.id || 'N/A';
+                        const stockName = row.stock_name || row.name || 'N/A';
+                        const cost = row.cost ? parseInt(row.cost).toLocaleString() : 'N/A';
+                        const returnPct = row.return_pct ? parseFloat(row.return_pct).toFixed(2) : 'N/A';
+                        const risk = row.risk ? parseFloat(row.risk).toFixed(2) : 'N/A';
+                        
+                        html += `<tr>
+                            <td>${stockId}</td>
+                            <td>${stockName}</td>
+                            <td>Rs. ${cost}</td>
+                            <td>${returnPct}%</td>
+                            <td>${risk}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</tbody></table>';
+                    html += '<p style="color: #64748b; margin-top: 1rem; font-size: 0.875rem;">These stocks are selected for optimal diversification using MST algorithm.</p>';
+                    document.getElementById('diversificationTable').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('diversificationTable').innerHTML = 
+                    `<div class="message error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function checkExportData() {
+            Utils.showLoading('exportMessage', 'Checking available data...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/powerbi/export`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<table><thead><tr><th>File</th><th>Status</th><th>Path</th></tr></thead><tbody>';
+                    
+                    for (const [key, info] of Object.entries(data.files)) {
+                        const status = info.exists ? 
+                            '<span style="color: #10b981;">✓ Available</span>' : 
+                            '<span style="color: #ef4444;">✗ Not Found</span>';
+                        html += `<tr>
+                            <td>${key}</td>
+                            <td>${status}</td>
+                            <td style="font-size: 0.85em; color: #64748b;">${info.path}</td>
+                        </tr>`;
+                    }
+                    
+                    html += '</tbody></table>';
+                    document.getElementById('exportStatus').innerHTML = html;
+                    Utils.showMessage('exportMessage', 
+                        'Data check completed. Import available files into Power BI.', 'success');
+                } else {
+                    Utils.showMessage('exportMessage', 
+                        `Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                Utils.showMessage('exportMessage', 
+                    `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function embedDashboard() {
+            const url = document.getElementById('embedUrl').value.trim();
+            
+            if (!url) {
+                Utils.showMessage('embedMessage', 
+                    'Please enter a Power BI embed URL', 'error');
+                return;
+            }
+            
+            if (!url.includes('powerbi.com')) {
+                Utils.showMessage('embedMessage', 
+                    'Invalid Power BI URL. Must be from powerbi.com', 'error');
+                return;
+            }
+            
+            document.getElementById('powerbiFrame').src = url;
+            document.getElementById('dashboardContainer').style.display = 'block';
+            Utils.showMessage('embedMessage', 
+                'Dashboard embedded successfully!', 'success');
+            
+            // Save to localStorage
+            localStorage.setItem('powerbi_embed_url', url);
+        }
+        
+        // Load saved embed URL on page load
+        window.addEventListener('load', () => {
+            const savedUrl = localStorage.getItem('powerbi_embed_url');
+            if (savedUrl) {
+                document.getElementById('embedUrl').value = savedUrl;
+                document.getElementById('powerbiFrame').src = savedUrl;
+                document.getElementById('dashboardContainer').style.display = 'block';
+            }
+        });
+        
+        // Load analytics on page load
+        loadAnalytics();
+    </script>
+</body>
+</html>

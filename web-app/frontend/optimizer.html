@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimizer & Results - Portfolio Selection</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>Portfolio Optimizer & Results</h1>
+            <p>Run optimization algorithms and view detailed portfolio results</p>
+        </div>
+
+        <div class="container">
+
+        <div class="card">
+            <h2>Optimization Parameters</h2>
+            
+            <label for="budget">Investment Budget (Rs.)</label>
+            <input type="number" id="budget" placeholder="Enter budget (e.g., 5000)" min="1" value="5000">
+            
+            <label for="algorithm">Select Algorithm</label>
+            <select id="algorithm">
+                <option value="all">Run All Algorithms</option>
+                <option value="2d">2D Dynamic Programming (0/1 Knapsack)</option>
+                <option value="1d">1D Dynamic Programming (0/1 Knapsack)</option>
+                <option value="unbounded">Unbounded Knapsack</option>
+                <option value="greedy">Greedy Algorithm</option>
+                <option value="fractional">Fractional Knapsack</option>
+            </select>
+            
+            <div style="margin-top: 1rem; padding: 0.8rem; background: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 0.9rem;">
+                <strong>Note:</strong>
+                <ul style="margin: 0.5rem 0 0 1.5rem; line-height: 1.8;">
+                    <li><strong>0/1 Knapsack:</strong> Each stock selected at most once (diversified portfolio)</li>
+                    <li><strong>Unbounded Knapsack:</strong> Can buy same stock multiple times (concentrated portfolio)</li>
+                </ul>
+            </div>
+            
+            <button onclick="runOptimizer()" id="optimizeBtn" style="margin-top: 1rem;">
+                Run Optimization
+            </button>
+            
+            <div id="optimizerMessage"></div>
+        </div>
+
+        <div class="card" id="resultsCard" style="display: none;">
+            <h2>Optimization Results Summary</h2>
+            <div id="optimizationSummary" class="results-summary"></div>
+            <div id="optimizationOutput" class="results-output"></div>
+        </div>
+
+        <!-- Detailed Results Section -->
+        <div class="card" id="detailedResultsCard" style="display: none;">
+            <h2>Detailed Portfolio Results</h2>
+            
+            <label for="algorithmSelect">Select Algorithm to View:</label>
+            <select id="algorithmSelect" onchange="loadDetailedResults()">
+                <option value="2d">2D Dynamic Programming (0/1)</option>
+                <option value="1d">1D Dynamic Programming (0/1)</option>
+                <option value="unbounded">Unbounded Knapsack</option>
+                <option value="greedy">Greedy Algorithm</option>
+                <option value="fractional">Fractional Knapsack</option>
+            </select>
+            
+            <div id="resultsMessage"></div>
+            
+            <div id="summaryStatsCard" style="display: none;">
+                <div class="stats-grid" style="margin-top: 1.5rem;">
+                    <div class="stat-card">
+                        <h3 id="totalStocks">-</h3>
+                        <p>Selected Stocks</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalCost">-</h3>
+                        <p>Total Investment</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalReturn">-</h3>
+                        <p>Expected Return</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="totalRisk">-</h3>
+                        <p>Total Risk Score</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="portfolioTableCard" style="display: none; margin-top: 1.5rem;">
+                <h3 style="color: #1e293b; margin-bottom: 1rem;">Selected Portfolio</h3>
+                <div id="portfolioTable"></div>
+            </div>
+            
+            <div id="chartCard" style="display: none; margin-top: 1.5rem;">
+                <h3 style="color: #1e293b; margin-bottom: 1rem;">Portfolio Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Algorithm Information</h2>
+            <div style="line-height: 1.8;">
+                <h3 style="color: #667eea; margin-top: 1rem;">2D Dynamic Programming (0/1 Knapsack)</h3>
+                <p>Optimal solution using 2D DP table. Each stock selected at most once. Time: O(n*W), Space: O(n*W)</p>
+                
+                <h3 style="color: #667eea; margin-top: 1rem;">1D Dynamic Programming (0/1 Knapsack)</h3>
+                <p>Space-optimized DP solution. Each stock selected at most once. Time: O(n*W), Space: O(W)</p>
+                
+                <h3 style="color: #667eea; margin-top: 1rem;">Unbounded Knapsack</h3>
+                <p>Allows multiple purchases of same stock for concentrated portfolios. Time: O(n*W), Space: O(W)</p>
+                
+                <h3 style="color: #667eea; margin-top: 1rem;">Greedy Algorithm</h3>
+                <p>Fast heuristic based on return/cost ratio. Time: O(n log n), Space: O(n)</p>
+                
+                <h3 style="color: #667eea; margin-top: 1rem;">Fractional Knapsack</h3>
+                <p>Allows partial stock purchases (theoretical). Time: O(n log n), Space: O(n)</p>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script src="js/auth-check.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        let currentChart = null;
+        
+        async function runOptimizer() {
+            const budget = parseInt(document.getElementById('budget').value);
+            const algorithm = document.getElementById('algorithm').value;
+            const btn = document.getElementById('optimizeBtn');
+            
+            if (!budget || budget <= 0) {
+                Utils.showMessage('optimizerMessage', 'Please enter a valid budget', 'error');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = 'Running Optimization...';
+            Utils.showLoading('optimizerMessage', 'Processing algorithms... This may take a few seconds');
+            
+            try {
+                const result = await API.runOptimization(budget, algorithm);
+                
+                // Parse the output to extract key metrics
+                const output = result.output;
+                const summaryData = parseOptimizationOutput(output);
+                
+                // Display summary cards
+                document.getElementById('optimizationSummary').innerHTML = createSummaryCards(summaryData);
+                
+                // Display detailed output
+                document.getElementById('optimizationOutput').innerHTML = 
+                    `<div class="results-details">
+                        <h3 style="color: #1a202c; margin-bottom: 1rem;">Detailed Output</h3>
+                        <pre class="output-pre">${output}</pre>
+                    </div>`;
+                
+                document.getElementById('resultsCard').style.display = 'block';
+                document.getElementById('detailedResultsCard').style.display = 'block';
+                
+                // Load detailed results for default algorithm
+                await loadDetailedResults();
+                
+                // Scroll to results
+                document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                Utils.showMessage('optimizerMessage', 
+                    'Optimization completed successfully! Results are shown below.', 'success');
+            } catch (error) {
+                Utils.showMessage('optimizerMessage', 
+                    `Optimization failed: ${error.message}`, 'error');
+                document.getElementById('resultsCard').style.display = 'none';
+                document.getElementById('detailedResultsCard').style.display = 'none';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run Optimization';
+            }
+        }
+        
+        async function loadDetailedResults() {
+            const algorithm = document.getElementById('algorithmSelect').value;
+            Utils.showLoading('resultsMessage', 'Loading detailed results...');
+            
+            try {
+                const results = await API.fetchResults(algorithm);
+                
+                if (results.length === 0) {
+                    Utils.showMessage('resultsMessage', 
+                        'No results found. Please run optimization first.', 'info');
+                    hideDetailedCards();
+                    return;
+                }
+                
+                displayDetailedResults(results);
+                Utils.showMessage('resultsMessage', 
+                    `Loaded ${results.length} stocks from ${algorithm.toUpperCase()} algorithm`, 'success');
+            } catch (error) {
+                Utils.showMessage('resultsMessage', 
+                    `Error loading results: ${error.message}`, 'error');
+                hideDetailedCards();
+            }
+        }
+        
+        function displayDetailedResults(results) {
+            // Show cards
+            document.getElementById('summaryStatsCard').style.display = 'block';
+            document.getElementById('portfolioTableCard').style.display = 'block';
+            document.getElementById('chartCard').style.display = 'block';
+            
+            // Calculate totals
+            let totalCost = 0;
+            let totalReturn = 0;
+            let totalRisk = 0;
+            
+            results.forEach(row => {
+                totalCost += parseFloat(row.cost || 0);
+                totalReturn += parseFloat(row.expected_return || row.expected_return_amount || 0);
+                totalRisk += parseFloat(row.risk || row.risk_score || 0);
+            });
+            
+            // Calculate average risk score
+            const avgRisk = results.length > 0 ? (totalRisk / results.length).toFixed(1) : 0;
+            
+            // Update summary
+            document.getElementById('totalStocks').textContent = results.length;
+            document.getElementById('totalCost').textContent = Utils.formatCurrency(totalCost);
+            document.getElementById('totalReturn').textContent = Utils.formatCurrency(totalReturn);
+            document.getElementById('totalRisk').textContent = avgRisk;
+            
+            // Create table
+            let html = '<table><thead><tr>';
+            html += '<th>Stock ID</th><th>Name</th><th>Quantity</th><th>Cost</th>';
+            html += '<th>Return %</th><th>Expected Return</th><th>Risk</th></tr></thead><tbody>';
+            
+            const selectedAlgo = document.getElementById('algorithmSelect').value;
+            const isFractional = selectedAlgo === 'fractional';
+            
+            results.forEach(row => {
+                const returnPct = row.return_pct || row.expected_return_percent || 0;
+                const expectedReturn = row.expected_return || row.expected_return_amount || 0;
+                const riskScore = row.risk || row.risk_score || 0;
+                const cost = parseFloat(row.cost);
+                
+                // Calculate quantity (for fractional, show fraction)
+                let quantity = '1';
+                if (isFractional && row.stock_name === 'TSLA' && cost < 31232) {
+                    quantity = (cost / 31232).toFixed(2);
+                } else if (isFractional && row.stock_name === 'AAPL' && cost < 22497) {
+                    quantity = (cost / 22497).toFixed(2);
+                } else if (isFractional && row.stock_name === 'GOOGL' && cost < 28585) {
+                    quantity = (cost / 28585).toFixed(2);
+                } else if (isFractional && row.stock_name === 'MSFT' && cost < 35243) {
+                    quantity = (cost / 35243).toFixed(2);
+                } else if (isFractional && row.stock_name === 'AMZN' && cost < 21911) {
+                    quantity = (cost / 21911).toFixed(2);
+                }
+                
+                html += `<tr>
+                    <td>${row.stock_id}</td>
+                    <td>${row.stock_name || row.name}</td>
+                    <td>${quantity}${isFractional && quantity !== '1' ? ' shares' : ''}</td>
+                    <td>${Utils.formatCurrency(row.cost)}</td>
+                    <td>${Utils.formatPercent(returnPct)}</td>
+                    <td>${Utils.formatCurrency(expectedReturn)}</td>
+                    <td>${parseFloat(riskScore).toFixed(1)}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            
+            // Add explanation for fractional
+            if (isFractional) {
+                html += `<div class="info-box" style="margin-top: 1rem; padding: 1rem; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
+                    <strong>ℹ️ Note:</strong> Fractional Knapsack allows buying partial shares (e.g., 0.32 shares), 
+                    which gives higher returns but is not possible in real stock markets. 
+                    Other algorithms (2D DP, 1D DP, Greedy) buy only whole shares, which is more realistic.
+                </div>`;
+            }
+            
+            document.getElementById('portfolioTable').innerHTML = html;
+            
+            // Create chart
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const labels = results.map(r => r.stock_name);
+            const data = results.map(r => parseFloat(r.cost));
+            
+            const ctx = document.getElementById('portfolioChart');
+            currentChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b',
+                            '#10b981', '#06b6d4', '#8b5cf6', '#f97316',
+                            '#a855f7', '#14b8a6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Investment Distribution by Stock',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function hideDetailedCards() {
+            document.getElementById('summaryStatsCard').style.display = 'none';
+            document.getElementById('portfolioTableCard').style.display = 'none';
+            document.getElementById('chartCard').style.display = 'none';
+        }
+        
+        function parseOptimizationOutput(output) {
+            const data = {
+                algorithms: []
+            };
+            
+            // Extract algorithm results
+            const algoRegex = /Algorithm: (.+?)\n.*?Selected Stocks: (\d+)\n.*?Total Cost: Rs\.(\d+)\n.*?Total Expected Return: Rs\.([\d.]+)/gs;
+            let match;
+            
+            while ((match = algoRegex.exec(output)) !== null) {
+                data.algorithms.push({
+                    name: match[1],
+                    stocks: match[2],
+                    cost: match[3],
+                    return: match[4]
+                });
+            }
+            
+            return data;
+        }
+        
+        function createSummaryCards(data) {
+            if (!data.algorithms || data.algorithms.length === 0) {
+                return '<p style="color: #64748b;">Running algorithms...</p>';
+            }
+            
+            let html = '<div class="optimization-summary-grid">';
+            
+            data.algorithms.forEach(algo => {
+                const returnPct = ((parseFloat(algo.return) / parseFloat(algo.cost)) * 100).toFixed(2);
+                html += `
+                    <div class="algo-summary-card">
+                        <div class="algo-name">${algo.name}</div>
+                        <div class="algo-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Stocks Selected</span>
+                                <span class="metric-value">${algo.stocks}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Total Investment</span>
+                                <span class="metric-value">Rs. ${parseInt(algo.cost).toLocaleString()}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Expected Return</span>
+                                <span class="metric-value highlight">Rs. ${parseFloat(algo.return).toLocaleString()}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Return Rate</span>
+                                <span class="metric-value">${returnPct}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+    </script>
+</body>
+</html>

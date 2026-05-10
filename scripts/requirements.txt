@@ -1,0 +1,10 @@
+# Python dependencies for stock data fetcher
+
+# Optional: For Yahoo Finance support
+# yfinance>=0.2.0
+
+# Optional: For better HTTP requests
+# requests>=2.28.0
+
+# Optional: For data manipulation
+# pandas>=1.5.0

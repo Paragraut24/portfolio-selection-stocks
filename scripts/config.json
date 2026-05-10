@@ -1,0 +1,30 @@
+{
+  "symbols": [
+    "INFY",
+    "TCS",
+    "AAPL",
+    "TSLA",
+    "RELIANCE",
+    "GOOGL",
+    "MSFT",
+    "AMZN",
+    "WIPRO",
+    "HCL"
+  ],
+  "output_path": "../backend/stocks.csv",
+  "data_source": "yahoo",
+  "api_settings": {
+    "alpha_vantage": {
+      "base_url": "https://www.alphavantage.co/query",
+      "rate_limit_per_minute": 5
+    },
+    "yahoo_finance": {
+      "enabled": false
+    }
+  },
+  "mock_data_settings": {
+    "cost_range": [500, 5000],
+    "return_range": [5.0, 20.0],
+    "risk_range": [3.0, 15.0]
+  }
+}

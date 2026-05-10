@@ -1,0 +1,4 @@
+id,name,cost,expected_return_percent,risk_score
+1,INFY,1400,10.0,6
+1,TCS,3200,11.0,5
+2,INFY,150,12.0,8

@@ -1,0 +1,4 @@
+id,name,cost,expected_return_percent,risk_score
+1,STOCK1,abc,10.0,5
+2,STOCK2,1000,invalid,5
+3,STOCK3,-500,10.0,5
